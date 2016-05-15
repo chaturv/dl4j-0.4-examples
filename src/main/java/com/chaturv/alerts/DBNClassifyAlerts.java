@@ -6,6 +6,7 @@ import org.canova.api.split.FileSplit;
 import org.canova.api.split.InputSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.datasets.iterator.DataSetIterator;
+import org.deeplearning4j.datasets.iterator.impl.IrisDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.nn.api.Layer;
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
@@ -38,7 +39,7 @@ public class DBNClassifyAlerts {
     private static Logger log = LoggerFactory.getLogger(DBNClassifyAlerts.class);
 
     private static int numSamples = 150;
-    private static int splitTrainNum = (int) (numSamples * .75);
+    private static int splitTrainNum = (int) (numSamples * .8);
     private static int seed = 123;
     private static int iterations = 1000; //number of times you allow a net to classify samples and be corrected with a weight update
     private static int listenerFreq = iterations/50;
@@ -55,7 +56,8 @@ public class DBNClassifyAlerts {
 
         DBNClassifyAlerts classifier = new DBNClassifyAlerts();
 
-        SplitDataSet splitDataSet = classifier.loadData();
+//        SplitDataSet splitDataSet = classifier.loadData();
+        SplitDataSet splitDataSet = classifier.loadDataIris();
         classifier.train(splitDataSet);
     }
 
@@ -67,11 +69,13 @@ public class DBNClassifyAlerts {
             .iterations(iterations) // # training iterations predict/classify & backprop
             .learningRate(1e-6) //size of the adjustments made to the weights with each iteration
             .optimizationAlgo(OptimizationAlgorithm.CONJUGATE_GRADIENT) // Backprop to calculate gradients
-            .regularization(true)
-            .l1(1e-1) //L1 regularization coefficient
+
+//            .l1(1e-1) //L1 regularization coefficient
             .l2(2e-4) //L2 regularization coefficient
+            .regularization(true)
+            .momentum(0.9)
             .useDropConnect(true)
-            .list(3) // # NN layers (doesn't count input layer)
+            .list(2) // # NN layers (doesn't count input layer)
 
             .layer(0, new RBM.Builder(RBM.HiddenUnit.RECTIFIED, RBM.VisibleUnit.GAUSSIAN)
                 .nIn(numRows * numColumns)
@@ -117,20 +121,43 @@ public class DBNClassifyAlerts {
 
     private SplitDataSet loadData() throws IOException, InterruptedException {
         //TODO: add bias unit? See IrisUtils. INDArray ret = Nd4j.ones(Math.abs(to - from), 4);
-//        InputSplit inputSplit = new FileSplit(new File("C:/work/repo/dl4j-0.4-examples/src/main/resources/alerts.csv"));
-        InputSplit inputSplit = new FileSplit(new File("C:/work/repo/dl4j-0.4-examples/src/main/resources/iris.txt"));
+        InputSplit inputSplit = new FileSplit(new File("C:/work/repo/dl4j-0.4-examples/src/main/resources/alerts.csv"));
 
         //create Canova record reader
         RecordReader recordReader = new CSVRecordReader(1); //skip header
         recordReader.initialize(inputSplit);
 
         //read the entire dataset
-        DataSetIterator iter = new RecordReaderDataSetIterator(recordReader, numSamples, 4, 3); //output label idx, numPossibleLabels
+        DataSetIterator iter = new RecordReaderDataSetIterator(recordReader, numSamples, 2, 3); //output label idx, numPossibleLabels
 //        while (iter.hasNext()) {
         DataSet dataSet = iter.next();
         dataSet.shuffle();
 //        dataSet.normalizeZeroMeanZeroUnitVariance();
 //        }
+
+        //print
+        System.out.println(dataSet);
+
+        //split
+        SplitTestAndTrain testAndTrain = dataSet.splitTestAndTrain(splitTrainNum, new Random(seed));
+        DataSet train = testAndTrain.getTrain();
+        DataSet test = testAndTrain.getTest();
+
+        //print
+        System.out.println(train);
+        System.out.println(test);
+
+        return new SplitDataSet(train, test);
+    }
+
+    private SplitDataSet loadDataIris() throws IOException, InterruptedException {
+        //read the entire dataset
+        DataSetIterator iter = new IrisDataSetIterator(numSamples, numSamples);
+
+        DataSet dataSet = iter.next();
+        dataSet.shuffle();
+        dataSet.normalizeZeroMeanZeroUnitVariance();
+
 
         //print
         System.out.println(dataSet);
