@@ -5,6 +5,7 @@ import org.canova.api.records.reader.impl.CSVRecordReader;
 import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
+import org.deeplearning4j.examples.feedforward.classification.PlotUtil;
 import org.deeplearning4j.examples.misc.csv.CSVExample;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -60,11 +61,11 @@ public class DBNClassifyAlerts2 {
             .regularization(true).l2(1e-4)
             .list(3)
             .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(3)
-                .activation("tanh")
+                .activation("relu")
                 .weightInit(WeightInit.XAVIER)
                 .build())
             .layer(1, new DenseLayer.Builder().nIn(3).nOut(3)
-                .activation("tanh")
+                .activation("relu")
                 .weightInit(WeightInit.XAVIER)
                 .build())
             .layer(2, new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
@@ -95,5 +96,10 @@ public class DBNClassifyAlerts2 {
         eval.eval(test.getLabels(), output);
         log.info(eval.stats());
         System.out.println(eval.stats());
+
+        //------------------------------------------------------------------------------------
+        //Training is complete. Code that follows is for plotting the data & predictions only
+
+//        PlotUtil.plotTrainingData(trainingData.getFeatures(), trainingData.getLabels(), allXYPoints, predictionsAtXYPoints, nPointsPerAxis);
     }
 }
