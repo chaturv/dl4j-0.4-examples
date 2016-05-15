@@ -121,7 +121,7 @@ public class DBNClassifyAlerts {
 
     private SplitDataSet loadData() throws IOException, InterruptedException {
         //TODO: add bias unit? See IrisUtils. INDArray ret = Nd4j.ones(Math.abs(to - from), 4);
-        InputSplit inputSplit = new FileSplit(new File("C:/work/repo/dl4j-0.4-examples/src/main/resources/alerts.csv"));
+        InputSplit inputSplit = new FileSplit(new File("C:/work/repo/dl4j-0.4-examples/src/main/resources/alerts_distinct_clusters.csv"));
 
         //create Canova record reader
         RecordReader recordReader = new CSVRecordReader(1); //skip header

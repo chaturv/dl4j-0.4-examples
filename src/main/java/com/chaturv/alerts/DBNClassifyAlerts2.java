@@ -6,7 +6,6 @@ import org.canova.api.split.FileSplit;
 import org.deeplearning4j.datasets.canova.RecordReaderDataSetIterator;
 import org.deeplearning4j.eval.Evaluation;
 import org.deeplearning4j.examples.feedforward.classification.PlotUtil;
-import org.deeplearning4j.examples.misc.csv.CSVExample;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -18,6 +17,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.SplitTestAndTrain;
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
+import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,16 +32,22 @@ public class DBNClassifyAlerts2 {
 
     public static void main(String[] args) throws  Exception {
 
+        // Customizing params
+        Nd4j.MAX_SLICES_TO_PRINT = -1;
+        Nd4j.MAX_ELEMENTS_PER_SLICE = -1;
+        Nd4j.ENFORCE_NUMERICAL_STABILITY = true;
+
         //First: get the dataset using the record reader. CSVRecordReader handles loading/parsing
         int numLinesToSkip = 1;
         String delimiter = ",";
         RecordReader recordReader = new CSVRecordReader(numLinesToSkip,delimiter);
-        recordReader.initialize(new FileSplit(new ClassPathResource("alerts.csv").getFile()));
+//        recordReader.initialize(new FileSplit(new ClassPathResource("alerts_distinct_clusters.csv").getFile()));
+        recordReader.initialize(new FileSplit(new ClassPathResource("alerts_overlapping_clusters.csv").getFile()));
 
         //Second: the RecordReaderDataSetIterator handles conversion to DataSet objects, ready for use in neural network
         int labelIndex = 2;     //5 values in each row of the iris.txt CSV: 4 input features followed by an integer label (class) index. Labels are the 5th value (index 4) in each row
         int numClasses = 3;     //3 classes (types of iris flowers) in the iris data set. Classes have integer values 0, 1 or 2
-        int batchSize = 170;    //Iris data set: 150 examples total. We are loading all of them into one DataSet (not recommended for large data sets)
+        int batchSize = 180;    //Iris data set: 150 examples total. We are loading all of them into one DataSet (not recommended for large data sets)
         DataSetIterator iterator = new RecordReaderDataSetIterator(recordReader,batchSize,labelIndex,numClasses);
 
 
@@ -49,7 +55,7 @@ public class DBNClassifyAlerts2 {
 
         final int numInputs = 2;
         int outputNum = 3;
-        int iterations = 1000;
+        int iterations = 1600;
         long seed = 6;
 
 
@@ -57,7 +63,7 @@ public class DBNClassifyAlerts2 {
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
             .seed(seed)
             .iterations(iterations)
-            .learningRate(0.1)
+            .learningRate(0.001) //size of the adjustments made to the weights with each iteration
             .regularization(true).l2(1e-4)
             .list(3)
             .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(3)
@@ -99,7 +105,13 @@ public class DBNClassifyAlerts2 {
 
         //------------------------------------------------------------------------------------
         //Training is complete. Code that follows is for plotting the data & predictions only
+        INDArray predictionsAtXYPoints = model.output(trainingData.getFeatures());
+        int nPointsPerAxis = 200;
 
-//        PlotUtil.plotTrainingData(trainingData.getFeatures(), trainingData.getLabels(), allXYPoints, predictionsAtXYPoints, nPointsPerAxis);
+        //plot training data
+        PlotUtil.plotTrainingData(trainingData.getFeatures(), trainingData.getLabels(), trainingData.getFeatures(), predictionsAtXYPoints , nPointsPerAxis);
+
+        //plot test data
+        PlotUtil.plotTestData(test.getFeatures(), test.getLabels(), output, test.getFeatures(), output, nPointsPerAxis);
     }
 }
