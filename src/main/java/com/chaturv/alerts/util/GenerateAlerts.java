@@ -11,14 +11,48 @@ public class GenerateAlerts {
 
     public static void main(String[] args) throws IOException {
 //        generateDistinctClusters();
-        generateOverlappingClusters();
+//        generateOverlappingClusters();
+        generateHighlyOverlappingClusters();
+    }
+
+    private static void generateHighlyOverlappingClusters() throws IOException {
+        Random random = new Random(123L);
+
+        StringBuilder sb = new StringBuilder();
+        FileWriter fw = new FileWriter("./src/main/resources/alerts_highly_overlapping_clusters.csv");
+        sb.append("#vol,price,class").append("\n");
+
+
+        for (int i = 0; i < 60; i++) {
+            double notional = random.nextFloat() * 3000000 + 1000000; //1m - 4m
+            double price = random.nextFloat() * 2.0 + 1.0; //1.0 - 3.0
+            sb.append(notional).append(",").append(price).append(",").append(0).append("\n"); //0 class
+
+        }
+
+        for (int i = 0; i < 60; i++) {
+            double notional = random.nextFloat() * 3000000 + 2000000; //2m - 5m
+            double price = random.nextFloat() * 2.5 + 1.5; //1.5 - 4.0
+            sb.append(notional).append(",").append(price).append(",").append(1).append("\n"); //0 class
+        }
+
+        for (int i = 0; i < 60; i++) {
+            double notional = random.nextFloat() * 3000000 + 3000000; //3m - 6m
+            double price = random.nextFloat() * 3.0 + 2.0; //2.0 - 5.0
+            sb.append(notional).append(",").append(price).append(",").append(2).append("\n"); //0 class
+        }
+
+
+        fw.write(sb.toString());
+        fw.close();
     }
 
     private static void generateOverlappingClusters() throws IOException {
         Random random = new Random(123L);
 
         StringBuilder sb = new StringBuilder();
-        FileWriter fw = new FileWriter("C:\\work\\repo\\dl4j-0.4-examples\\src\\main\\resources\\alerts_overlapping_clusters.csv");
+        FileWriter fw = new FileWriter("./src/main/resources/alerts_overlapping_clusters.csv");
+        sb.append("#vol,price,class").append("\n");
 
 
         for (int i = 0; i < 60; i++) {
@@ -49,7 +83,8 @@ public class GenerateAlerts {
         Random random = new Random(123L);
 
         StringBuilder sb = new StringBuilder();
-        FileWriter fw = new FileWriter("C:\\work\\repo\\dl4j-0.4-examples\\src\\main\\resources\\alerts_distinct_clusters.csv");
+        FileWriter fw = new FileWriter("./src/main/resources/alerts_distinct_clusters.csv");
+        sb.append("#vol,price,class").append("\n");
 
 
         for (int i = 0; i < 60; i++) {

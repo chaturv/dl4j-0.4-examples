@@ -31,7 +31,6 @@ public class DBNClassifyAlerts2 {
     private static Logger log = LoggerFactory.getLogger(DBNClassifyAlerts2.class);
 
     public static void main(String[] args) throws  Exception {
-
         // Customizing params
         Nd4j.MAX_SLICES_TO_PRINT = -1;
         Nd4j.MAX_ELEMENTS_PER_SLICE = -1;
@@ -42,28 +41,28 @@ public class DBNClassifyAlerts2 {
         String delimiter = ",";
         RecordReader recordReader = new CSVRecordReader(numLinesToSkip,delimiter);
 //        recordReader.initialize(new FileSplit(new ClassPathResource("alerts_distinct_clusters.csv").getFile()));
-        recordReader.initialize(new FileSplit(new ClassPathResource("alerts_overlapping_clusters.csv").getFile()));
+//        recordReader.initialize(new FileSplit(new ClassPathResource("alerts_overlapping_clusters.csv").getFile()));
+        recordReader.initialize(new FileSplit(new ClassPathResource("alerts_highly_overlapping_clusters.csv").getFile()));
+
 
         //Second: the RecordReaderDataSetIterator handles conversion to DataSet objects, ready for use in neural network
-        int labelIndex = 2;     //5 values in each row of the iris.txt CSV: 4 input features followed by an integer label (class) index. Labels are the 5th value (index 4) in each row
-        int numClasses = 3;     //3 classes (types of iris flowers) in the iris data set. Classes have integer values 0, 1 or 2
-        int batchSize = 180;    //Iris data set: 150 examples total. We are loading all of them into one DataSet (not recommended for large data sets)
-        DataSetIterator iterator = new RecordReaderDataSetIterator(recordReader,batchSize,labelIndex,numClasses);
+        int labelIndex = 2;     //2 values in each row of CSV
+        int numClasses = 3;     //3 classes. Classes have integer values 0, 1 or 2
+        int batchSize = 180;    //not recommended for large data sets
 
-
+        DataSetIterator iterator = new RecordReaderDataSetIterator(recordReader, batchSize, labelIndex ,numClasses);
         DataSet next = iterator.next();
 
         final int numInputs = 2;
         int outputNum = 3;
-        int iterations = 1600;
+        int iterations = 2000;
         long seed = 6;
-
 
         log.info("Build model....");
         MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
             .seed(seed)
             .iterations(iterations)
-            .learningRate(0.001) //size of the adjustments made to the weights with each iteration
+            .learningRate(0.01) //size of the adjustments made to the weights with each iteration
             .regularization(true).l2(1e-4)
             .list(3)
             .layer(0, new DenseLayer.Builder().nIn(numInputs).nOut(3)
